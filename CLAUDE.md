@@ -34,6 +34,15 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
 - The compiler reads a file with gen2 syntax unless the first `options gen2` outside comments and strings is followed by
   `= false` (`detectGen2Syntax` in `src/ast/ast_parse.cpp`). A file without the marker takes the default of the host:
   gen2 for `daslang`.
+- In Dagor, a file without the marker is gen1 for the game hosts: they set `policies.version_2_syntax` from the
+  `DasSyntax` of the loader context (`prog/gameLibs/ecs/scripts/das/das_scripts.cpp`, the enum in
+  `prog/gameLibs/publicInclude/ecs/scripts/dasEs.h`), and no game setting selects `V2_0`. Two sets of such files are
+  gen2: those in the daScript copy, `prog/1stPartyLibs/daScript/`, which `daslang` runs, and those that the internal
+  hosts with gen2 policies load. Outside the copy, `git grep -n -E 'version_2_syntax = true|syntax_version=V2_0'` finds
+  these hosts. On Dagor `master`, two of them load files of the checkout: a user-script host loads a samples directory,
+  and a server started with `--local_dascript_syntax_version=V2_0` loads the directory that its start script passes in
+  `--scripts_path`. The Dagor repository is internal: cite a Dagor path here only when GaijinEntertainment/DagorEngine
+  on GitHub has it.
 - The compiler rejects this input, and the grammar accepts it. Keep the list current:
   - `..` or `=>` after a block, lambda, or local function whose body follows `=>`, as in `$(x) => a .. b`. The
     compiler's parser tables merge the lookaheads of every `=>` body and reject the token there; the grammar reads an
@@ -248,14 +257,38 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
   commands from the root of the checkout, with `GRAMMAR` set to the directory of this grammar:
 
   ```sh
+  bom=$(printf '\357\273\277')
   git ls-files '*.das' | while read -r f; do
-    grep -m1 -E '^[[:space:]]*options[[:space:]]+gen2([^_[:alnum:]]|$)' "$f" | grep -qE 'gen2[[:space:]=]*false' ||
-      echo "$f"
+    grep -m1 -E "^($bom)?[[:space:]]*options[[:space:]]+gen2([^_[:alnum:]]|\$)" "$f" |
+      grep -qE 'gen2[[:space:]=]*false' || echo "$f"
   done > /tmp/das-files.txt
   tree-sitter parse --grammar-path "$GRAMMAR" --paths /tmp/das-files.txt --quiet --stat
   ```
 
   Only the files that the Reference section lists may fail.
+- With a Dagor checkout, also parse its gen2 files. Run these commands with `sh` from the root of the checkout, with
+  `GRAMMAR` set as above and `GEN2_DIRS` set to the directories, separated by spaces, that the internal gen2 hosts of
+  the Reference section load:
+
+  ```sh
+  bom=$(printf '\357\273\277')
+  git ls-files '*.das' | while read -r f; do
+    m=$(grep -m1 -E "^($bom)?[[:space:]]*options[[:space:]]+gen2([^_[:alnum:]]|\$)" "$f")
+    if [ -n "$m" ]; then
+      printf '%s\n' "$m" | grep -qE 'gen2[[:space:]=]*false' || echo "$f"
+    else
+      for d in prog/1stPartyLibs/daScript $GEN2_DIRS; do
+        case "$f" in "$d"/*) echo "$f"; break ;; esac
+      done
+    fi
+  done > /tmp/dagor-das-files.txt
+  tree-sitter parse --grammar-path "$GRAMMAR" --paths /tmp/dagor-das-files.txt --quiet --stat
+  ```
+
+  Only the files that both compiler releases reject for a syntax error may fail. To get the verdict of the Dagor
+  release, build the compiler of a daScript checkout with the generated parser files of the copy
+  (`prog/1stPartyLibs/daScript/src/parser/ds2_parser.cpp`, `ds2_parser.hpp`, `ds2_lexer.cpp`) in place of its own;
+  the Dagor copy has no CMake build.
 - Check each new corpus case with the compiler before you add it: a case without `:error` parses without a syntax
   error, and a `:error` case has one. Build the compiler from a daScript checkout with
   `cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DDAS_FLEX_BISON_DISABLED=ON` and
