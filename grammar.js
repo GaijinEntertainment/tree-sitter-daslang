@@ -1085,11 +1085,14 @@ export default grammar({
       ),
     )),
 
-    field: $ => prec.left(PREC.FIELD, seq(
-      field('value', $._operand),
-      choice('.', '!.', seq('.', '.')),
-      field('name', choice($.identifier, $._field_tag)),
+    field: $ => prec.left(PREC.FIELD, choice(
+      seq(field('value', $._operand), choice('.', '!.', seq('.', '.')), field('name', choice($.identifier, $._field_tag))),
+      seq(field('value', $._operand), $._dot_without_name),
     )),
+
+    // constraint: the compiler parser recovers from a `.` without a name through an error rule that reports nothing,
+    // and takes the name after a `.` wherever one follows
+    _dot_without_name: _ => prec(-1, '.'),
 
     safe_field: $ => prec.left(PREC.FIELD, seq(
       field('value', $._operand),
