@@ -1448,13 +1448,18 @@ export default grammar({
 
     // Lexical
 
+    // constraint: the compiler lexer skips blanks and line breaks after `include`, and replaces the directive and the
+    // next run of non-blank characters with the text of that file. A tie of match length goes to the earlier rule, so
+    // this rule stays before `identifier`.
+    include_directive: _ => token(seq(
+      'include',
+      optional(choice(/[ \t\r\n]+[^ \t\r\n]+/, /[^ \t\r\n_a-zA-Z0-9`][^ \t\r\n]*/)),
+    )),
+
     identifier: _ => /[_a-zA-Z][_a-zA-Z0-9`]*/,
 
     comment: _ => token(seq('//', /.*/)),
 
     line_directive: _ => token(seq('#', /[0-9]+/, ',', /[0-9]+/, ',', /"[^"]+"/, '#')),
-
-    // constraint: the compiler lexer replaces `include` and the file name after it with the text of that file
-    include_directive: _ => token(seq('include', choice(/[ \t]+[^ \t\r\n]+/, /[^ \t\r\n_a-zA-Z0-9`][^ \t\r\n]*/))),
   },
 });

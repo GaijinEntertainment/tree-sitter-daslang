@@ -164,9 +164,10 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
 - The compiler parser recovers from a `.` that no name follows through an error rule that reports nothing, and builds a
   field with an empty name. `field` takes that form with `_dot_without_name`, whose low precedence keeps a name after
   the `.` in the field.
-- The compiler lexer replaces `include` and the file name after it with the text of that file. `include_directive` is an
-  extra token, and the grammar reads the text around it as if the included text were empty. A word that only starts
-  with `include` is a name.
+- The compiler lexer reads `include`, skips blanks and line breaks, and replaces the directive and the next run of
+  non-blank characters with the text of that file; at the end of the text, the directive has no file name.
+  `include_directive` is an extra token, and the grammar reads the text around it as if the included text were empty.
+  A word that only starts with `include` is a name.
 - The compiler lexer reads `%name!`, the text, and the first `%%` after it as one token, and parses the rewrite that the
   macro returns in its place. The language reference requires one parenthesized expression as the rewrite, so
   `inline_reader` is one token where an operand can stand.
