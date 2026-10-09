@@ -31,6 +31,24 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
   compiler library with `policies.version_2_syntax = true`, which parses without the requires.
 - The grammar does not check what the compiler checks after it reads the syntax: type inference, name resolution, and
   the checks in the actions of the parser.
+- The compiler reads a file with gen2 syntax unless the first `options gen2` outside comments and strings is followed by
+  `= false` (`detectGen2Syntax` in `src/ast/ast_parse.cpp`). A file without the marker takes the default of the host:
+  gen2 for `daslang`.
+- The compiler rejects this input, and the grammar accepts it. Keep the list current:
+  - `..` or `=>` after a block, lambda, or local function whose body follows `=>`, as in `$(x) => a .. b`. The
+    compiler's parser tables merge the lookaheads of every `=>` body and reject the token there; the grammar reads an
+    interval or a tuple pair of the block.
+  - `>>` or `>>>` in an expression inside the `<` `>` of a type, as in `array<typedecl(a >> b)>`. The compiler lexer
+    splits it into `>` tokens while a type is open; the scanner splits it only where the parse state takes no shift
+    operator.
+  - A token that the compiler lexer reads by the longest match where the grammar's parse state takes only a shorter
+    one, outside the tokens that the scanner reads.
+- The files of daScript `master` that the compiler rejects for a syntax error: `tests/language/failed_aka.das`,
+  `failed_annotation_int64_overflow.das`, `failed_annotation_int64_positive.das`, `failed_cast_requires_parens.das`,
+  `failed_comment_eof.das`, `failed_constants.das`, `failed_mismatching_curly_bracers.das`,
+  `failed_mismatching_parentheses.das`, and `failed_named_call_order.das` (all in `tests/language/`),
+  `utils/detect-dupe/fixture/_fixture_broken_cases.das`, `utils/mcp/tests/_fixture_gen1.das`, and
+  `utils/mcp/tests/_fixture_syntax_error.das`.
 
 ## Where things live
 
@@ -55,11 +73,86 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
 - `test/corpus/` - corpus tests, one file per topic. `errors.txt` holds the inputs that must produce ERROR, each marked
   `:error`.
 
+## Names
+
+- A node kind takes the snake_case name of the AST class that the compiler parser builds for the construct, without the
+  `Expr` prefix and with each abbreviation spelled out: `ExprOp2` is `binary_operation`, `ExprPtr2Ref` is
+  `pointer_to_reference`, `ExprConstUInt8` is `constant_unsigned_integer8`.
+- An expression name that equals a keyword takes the suffix `_expression`: `for_expression`, `while_expression`,
+  `with_expression`, `unsafe_expression`, `return_expression`, `break_expression`, `continue_expression`,
+  `yield_expression`, `let_expression`, `delete_expression`, `label_expression`, `goto_expression`,
+  `assume_expression`, `cast_expression`, `new_expression`, `is_expression`, and `block_expression`.
+- A declaration takes the name of its class in `include/daScript/ast/ast.h` followed by `_declaration`:
+  `function_declaration`, `variable_declaration` (a `Variable`, also each function argument), `field_declaration`,
+  `enumeration_declaration`, `annotation_declaration`. A directive takes the name of its rule in `ds2_parser.ypp`:
+  `module_declaration`, `require_declaration`, `options_declaration`, `expect_declaration`.
+- A form that shares a class with other forms, or has no class, takes the name that the language reference
+  (`doc/source/reference/language/`) gives it: `struct_declaration` and `class_declaration` (both `Structure`),
+  `typedef_declaration`, `tuple_alias_declaration`, `variant_alias_declaration`, `bitfield_alias_declaration`,
+  `local_type_alias` (an `ExprAssume` with a type), `interval` (`..`), `pipe` (`<|`, `|>`, and a piped block),
+  `finally_block`, `interpolation`, `format_specifier`, `escape_sequence`. A type form takes the reference name with the
+  suffix `_type`: `pointer_type`, `smart_pointer_type`, `fixed_array_type`, `array_type`, `table_type`, `iterator_type`,
+  `block_type`, `function_type`, `lambda_type`, `tuple_type`, `variant_type`, `bitfield_type`, `option_type`,
+  `auto_type`, `basic_type`, `typedecl_type`, `type_type` (`type<T>` in a type), and `type_macro`.
+- A form with neither a class nor a reference name takes the name of its rule in `ds2_parser.ypp`: `global_let`,
+  `structure_type`, `qualified_name` (`name_in_namespace` with `::`), `annotation_list`, `expected_error`.
+- A field takes the name of the AST member that holds the part, spelled out: the `condition`, `if_true`, and `if_false`
+  of `if_then_else`, the `subexpression`, `left`, and `right` of `ternary_operation`, the `first_type` and
+  `second_type` of a type, the `init` of a variable. A pipe has the `function_call` and `argument` fields of its parser
+  rule.
+- Exceptions to these rules:
+  - `source_file` is the root, as in the other tree-sitter grammars.
+  - `make_block` is one kind for `$`, `@`, and `@@`, although the reference names a block, a lambda, and a local
+    function: `block_expression` is the statement block, and the leading token tells the three apart.
+  - `make_array` covers `[]`, which builds an `ExprMakeStruct`, and the `array struct<T>(...)`, `array tuple<...>(...)`,
+    and `array variant<...>(...)` forms. `make_table` covers `{...}` and `table(...)`, which build an `ExprMakeArray`
+    inside a call. `make_tuple` covers `tuple<...>(...)`, which builds an `ExprMakeStruct`.
+  - `parenthesized_expression` has no class and no reference name.
+  - `move_argument` is the `<- x` argument of a call, which builds a call of `consume_argument`.
+  - `unsafe_call` is `unsafe(x)`; the reference calls it an unsafe expression, a name that `unsafe_expression` (the
+    `unsafe { }` block, `ExprUnsafe`) takes.
+  - `modified_type` holds a type and one of the modifiers `const`, `&`, `#`, `implicit`, `explicit`, `-const`, `-&`,
+    `-[]`, `-#`, `==const`, `==&`, which the reference does not name.
+  - `module_path` is the module name of `require` and `with (module ...)`.
+  - `qualified_name` has a `module` field, which no AST member holds.
+  - A `field`, `safe_field`, `is_variant`, or `as_variant` whose name is a `$f(...)` tag keeps its kind, and the tag
+    is its `name`; the compiler builds an `ExprTag` around the field.
+  - `operator_name`, `enumeration_entry`, `bitfield_entry`, and `line_directive` have no class and no reference name.
+  - `negative_integer64_minimum` appears in the tree as `constant_integer64`.
+
 ## Rules
 
 - The compiler lexer returns a semicolon token at a line end, at the end of the text, and before a `}`, unless a `(` or
   `[` is open on the current level or the keyword flag is set. The scanner returns `_newline_semicolon` there, also
   where no rule accepts it, so that a line break inside an expression is an error as it is for the compiler.
+- `_newline_semicolon` and `_newline_comma` are zero-width and end before the line break, so that no node takes the
+  line break; the next scan returns the line break as the extra `_line_end`.
+- The compiler parser opens a level of lexer state at each statement block and enumeration body, and the scanner keeps
+  a stack of the open braces. The parse state chooses the kind of a `{`: `_block_open` opens a statement level,
+  `_list_open` an enumeration or bitfield level where a line end returns `_newline_comma`, `_table_open` counts as an
+  open `(`, `_brace_open` changes no level, and `_interpolation_open` starts the expression of a string.
+- Inside an interpolation the compiler returns no semicolon before a `}`, so a block with a one-line body needs an
+  explicit `;` there; the scanner follows that.
+- The compiler parser sets a keyword flag before the keyword of an `if`, `static_if`, `for`, `while`, or `with`
+  statement and clears it when the statement ends or a one-line body starts. The zero-width `_keyword_start` sets the
+  flag and `_keyword_end` clears it. The scanner returns `_keyword_end` after the line breaks that the flag skipped, and
+  not before `else`, `elif`, `static_elif`, `finally`, or a `{` where the parse state takes a block.
+- An `if` statement keeps the flag until its first one-line body. `braced_if_then_else` is the statement whose bodies
+  all have braces, and `_keyword_end` follows it; `short_if_then_else` takes `_keyword_end` before its first one-line
+  body, and `plain_elif` and `_plain_else` follow after that body. All of them appear as `if_then_else`.
+- The compiler parser opens a statement level right after `finally`, so a line break between `finally` and its `{` is
+  an error even after an `if` or inside `(`. The scanner returns `_finally` and keeps that in `after_finally`.
+- `_operand` is an expression that can be the operand of an operator; `_expression_no_bracket` adds the interval and
+  the tuple pair, which the compiler's precedence makes non-associative; `_expression` adds the table constructor and
+  the comprehension in braces, which cannot start a statement. Keep each rule at the level where the compiler parser
+  takes it.
+- The precedence of a step governs the parse position right after it, and the last step of a `prec` region takes the
+  outer precedence when more steps follow. The compiler parser shifts a token at the precedence of the token, so a rule
+  whose token has a precedence other than the rule gives that precedence to the steps before the token: the `?` of
+  `?as` shifts at the precedence of `? :`, and a postfix `++` or `--` at the precedence of the unary operators.
+- The body after `=>` is an `_operand` at the lowest precedence, because the compiler parser reads every `=>` body up to
+  the first token below its precedence.
+- The compiler takes one annotation list before a declaration.
 - Keep the `externals` array in `grammar.js` and `enum TokenType` in `src/scanner.c` in the same order.
 - The scanner returns each external token where the compiler lexer would return it, whether or not the parse state
   accepts it. The internal lexer of tree-sitter considers only the tokens of the parse state, so a token that the
@@ -67,8 +160,8 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
 - `_error_sentinel` is the last external token and no rule uses it. It is valid only in error recovery, where the
   scanner returns no zero-width token.
 - The runtime restores the scanner state from the last external token, so a scan that changes the state returns a token.
-- `KEYWORDS` in `grammar.js` holds the keywords of the compiler lexer that the grammar uses, and the `reserved` set
-  makes each of them a non-name. Add a keyword there when a rule starts to use it.
+- `KEYWORDS` in `grammar.js` holds the keywords of the compiler lexer, and the `reserved` set makes each of them a
+  non-name. A reserved word must be a token of a rule. `finally` is not in the list: the scanner reads it.
 - `module_path` takes each `.` and `/` after a name, as the compiler does: a require guard ends only before a word, so
   `require ?guard ./mod` is an error.
 - A workflow pins each action to the commit SHA of a release and names the release in a comment
@@ -102,7 +195,20 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
 
 - After a change to `grammar.js` or `src/scanner.c`, run `tree-sitter generate` and `tree-sitter test` in this
   directory, and commit the regenerated `src/` files with the change. After a change to `grammar.js`, also run
-  `npm run lint`.
+  `npm run lint`. After a change to `src/scanner.c`, also run `tree-sitter fuzz`, which compares incremental parses
+  with fresh parses.
+- After a change to `grammar.js` or `src/scanner.c`, also parse every gen2 file of a daScript checkout. Run these
+  commands from the root of the checkout, with `GRAMMAR` set to the directory of this grammar:
+
+  ```sh
+  git ls-files '*.das' | while read -r f; do
+    grep -m1 -E '^[[:space:]]*options[[:space:]]+gen2([^_[:alnum:]]|$)' "$f" | grep -qE 'gen2[[:space:]=]*false' ||
+      echo "$f"
+  done > /tmp/das-files.txt
+  tree-sitter parse --grammar-path "$GRAMMAR" --paths /tmp/das-files.txt --quiet --stat
+  ```
+
+  Only the files that the Reference section lists may fail.
 - Check each new corpus case with the compiler before you add it: a case without `:error` parses without a syntax
   error, and a `:error` case has one. Build the compiler from a daScript checkout with
   `cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DDAS_FLEX_BISON_DISABLED=ON` and
