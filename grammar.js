@@ -559,10 +559,10 @@ export default grammar({
       $.annotation_declaration,
       alias($.annotation_operation, $.annotation_declaration),
       parens($, $._annotation),
+      prec(PREC.PIPE, seq('|>', $._annotation)),
     ),
 
     annotation_declaration: $ => seq(
-      optional('|>'),
       field('name', choice($._name_in_namespace, alias(choice('require', 'private', 'template'), $.identifier))),
       optional(parens($, sepBy1(field('arguments', $.annotation_argument), ','))),
     ),
