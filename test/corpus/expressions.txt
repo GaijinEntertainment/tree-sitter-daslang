@@ -357,6 +357,38 @@ let h = i. .j
         name: (identifier)))))
 
 ================================================================================
+Field access without a name
+================================================================================
+
+let a = (b.) + c. + 1
+def f() {
+    d.
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (global_let
+    variables: (variable_declaration
+      name: (identifier)
+      init: (binary_operation
+        left: (binary_operation
+          left: (parenthesized_expression
+            (field
+              value: (variable
+                name: (identifier))))
+          right: (field
+            value: (variable
+              name: (identifier))))
+        right: (constant_integer))))
+  (function_declaration
+    name: (identifier)
+    body: (block_expression
+      (field
+        value: (variable
+          name: (identifier))))))
+
+================================================================================
 Safe navigation
 ================================================================================
 

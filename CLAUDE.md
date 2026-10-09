@@ -152,6 +152,9 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
   `?as` shifts at the precedence of `? :`, and a postfix `++` or `--` at the precedence of the unary operators.
 - The body after `=>` is an `_operand` at the lowest precedence, because the compiler parser reads every `=>` body up to
   the first token below its precedence.
+- The compiler parser recovers from a `.` that no name follows through an error rule that reports nothing, and builds a
+  field with an empty name. `field` takes that form with `_dot_without_name`, whose low precedence keeps a name after
+  the `.` in the field.
 - The compiler takes one annotation list before a declaration.
 - Keep the `externals` array in `grammar.js` and `enum TokenType` in `src/scanner.c` in the same order.
 - The scanner returns each external token where the compiler lexer would return it, whether or not the parse state
