@@ -183,8 +183,9 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
 - `_error_sentinel` is the last external token and no rule uses it. It is valid only in error recovery, where the
   scanner returns no zero-width token.
 - The runtime restores the scanner state from the last external token, so a scan that changes the state returns a token.
-- `KEYWORDS` in `grammar.js` holds the keywords of the compiler lexer, and the `reserved` set makes each of them a
-  non-name. A reserved word must be a token of a rule. `finally` is not in the list: the scanner reads it.
+- `KEYWORDS` in `grammar.js` holds every word of a `<normal>"word"` rule in `ds2_lexer.lpp` except `finally`, which the
+  scanner reads, and `include`, which `include_directive` takes. The `reserved` set makes each of them a non-name. A
+  reserved word must be a token of a rule.
 - `module_path` takes each `.` and `/` after a name, as the compiler does: a require guard ends only before a word, so
   `require ?guard ./mod` is an error.
 - In `queries/highlights.scm`, a later pattern overrides an earlier one in both tree-sitter-highlight and Neovim. Put a
