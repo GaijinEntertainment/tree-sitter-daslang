@@ -192,9 +192,9 @@ def operator delete(var a : Foo) {
       name: (identifier)
       name: (identifier)
       type: (structure_type
-        name: (identifier)))
+        (identifier)))
     result: (structure_type
-      name: (identifier))
+      (identifier))
     body: (variable
       name: (identifier)))
   (function_declaration
@@ -202,7 +202,7 @@ def operator delete(var a : Foo) {
     arguments: (variable_declaration
       name: (identifier)
       type: (structure_type
-        name: (identifier)))
+        (identifier)))
     arguments: (variable_declaration
       name: (identifier)
       type: (basic_type))
@@ -213,7 +213,7 @@ def operator delete(var a : Foo) {
     arguments: (variable_declaration
       name: (identifier)
       type: (structure_type
-        name: (identifier)))
+        (identifier)))
     arguments: (variable_declaration
       name: (identifier)
       type: (basic_type))
@@ -227,7 +227,7 @@ def operator delete(var a : Foo) {
     arguments: (variable_declaration
       name: (identifier)
       type: (structure_type
-        name: (identifier)))
+        (identifier)))
     body: (constant_integer))
   (function_declaration
     name: (operator_name
@@ -235,7 +235,7 @@ def operator delete(var a : Foo) {
     arguments: (variable_declaration
       name: (identifier)
       type: (structure_type
-        name: (identifier)))
+        (identifier)))
     arguments: (variable_declaration
       name: (identifier)
       type: (basic_type))
@@ -246,7 +246,7 @@ def operator delete(var a : Foo) {
     arguments: (variable_declaration
       name: (identifier)
       type: (structure_type
-        name: (identifier)))
+        (identifier)))
     body: (constant_boolean))
   (function_declaration
     name: (operator_name
@@ -254,14 +254,14 @@ def operator delete(var a : Foo) {
     arguments: (variable_declaration
       name: (identifier)
       type: (structure_type
-        name: (identifier)))
+        (identifier)))
     body: (constant_integer))
   (function_declaration
     name: (operator_name)
     arguments: (variable_declaration
       name: (identifier)
       type: (structure_type
-        name: (identifier)))
+        (identifier)))
     body: (variable
       name: (identifier)))
   (function_declaration
@@ -269,7 +269,7 @@ def operator delete(var a : Foo) {
     arguments: (variable_declaration
       name: (identifier)
       type: (structure_type
-        name: (identifier)))
+        (identifier)))
     body: (block_expression)))
 
 ================================================================================
@@ -288,7 +288,7 @@ def float4(a : Foo) : float4 {
     arguments: (variable_declaration
       name: (identifier)
       type: (structure_type
-        name: (identifier)))
+        (identifier)))
     result: (basic_type)
     body: (block_expression
       (return_expression
@@ -494,10 +494,10 @@ class Foo : Base {
       name: (identifier)
       result: (pointer_type
         first_type: (structure_type
-          name: (identifier)))
+          (identifier)))
       body: (new_expression
         type_expression: (structure_type
-          name: (identifier))))
+          (identifier))))
     methods: (function_declaration
       name: (identifier)
       arguments: (variable_declaration

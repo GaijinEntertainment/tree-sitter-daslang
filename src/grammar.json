@@ -13646,12 +13646,8 @@
       ]
     },
     "structure_type": {
-      "type": "FIELD",
-      "name": "name",
-      "content": {
-        "type": "SYMBOL",
-        "name": "_name_in_namespace"
-      }
+      "type": "SYMBOL",
+      "name": "_name_in_namespace"
     },
     "type_type": {
       "type": "SEQ",

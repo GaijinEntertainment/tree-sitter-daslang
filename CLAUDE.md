@@ -168,6 +168,11 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
   macro returns in its place. The language reference requires one parenthesized expression as the rewrite, so
   `inline_reader` is one token where an operand can stand.
 - The compiler takes one annotation list before a declaration.
+- A node kind has the same fields wherever it appears. `structure_type` in `make_struct` is an alias of
+  `_name_in_namespace`, so that the parser does not choose between a call and a constructor at the name, and the
+  `structure_type` rule has no field either.
+- The generator copies the fields of an aliased hidden rule into the parent node. A rule that has fields and appears
+  under an alias gets a visible name, as `untyped_argument`, `single_let`, and `braced_if_then_else` do.
 - Keep the `externals` array in `grammar.js` and `enum TokenType` in `src/scanner.c` in the same order.
 - The scanner returns each external token where the compiler lexer would return it, whether or not the parse state
   accepts it. The internal lexer of tree-sitter considers only the tokens of the parse state, so a token that the
