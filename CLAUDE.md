@@ -50,6 +50,9 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
   - `>>` or `>>>` in an expression inside the `<` `>` of a type, as in `array<typedecl(a >> b)>`. The compiler lexer
     splits it into `>` tokens while a type is open; the scanner splits it only where the parse state takes no shift
     operator.
+  - `>>` or `>>>` in an expression anywhere after a type macro with `<`, as in `a : foo<int>` and a later `x >> 1`. The
+    type macro rules of `ds2_parser.ypp` raise `das_arrow_depth` and never lower it, so the compiler lexer splits each
+    later `>>` into `>` tokens. That is a compiler defect; the grammar does not copy it.
   - A token that the compiler lexer reads by the longest match where the grammar's parse state takes only a shorter
     one, outside the tokens that the scanner reads: `var a &= 1`, `a : int&&`, and `x => a..b` read as `&` `=`, `&`
     `&`, and `.` `.`. The internal lexer of tree-sitter considers only the tokens of the parse state; the scanner
