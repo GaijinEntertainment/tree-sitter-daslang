@@ -235,3 +235,36 @@ let include_count = 1
     variables: (variable_declaration
       name: (identifier)
       init: (constant_integer))))
+
+================================================================================
+Include directive with the file name on the next line
+================================================================================
+
+include
+    common/shared.das
+let include_count = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (include_directive)
+  (global_let
+    variables: (variable_declaration
+      name: (identifier)
+      init: (constant_integer))))
+
+================================================================================
+Include directive without a file name at the end of the text
+================================================================================
+
+let a = 1
+include
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (global_let
+    variables: (variable_declaration
+      name: (identifier)
+      init: (constant_integer)))
+  (include_directive))
