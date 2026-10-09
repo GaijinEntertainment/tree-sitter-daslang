@@ -188,6 +188,7 @@ export default grammar({
     $._double,
     $._float16,
     $.block_comment,
+    $.include_directive,
     $._line_end,
     $._lexer_error,
     $._error_sentinel,
@@ -1447,14 +1448,6 @@ export default grammar({
     ),
 
     // Lexical
-
-    // constraint: the compiler lexer skips blanks and line breaks after `include`, and replaces the directive and the
-    // next run of non-blank characters with the text of that file. A tie of match length goes to the earlier rule, so
-    // this rule stays before `identifier`.
-    include_directive: _ => token(seq(
-      'include',
-      optional(choice(/[ \t\r\n]+[^ \t\r\n]+/, /[^ \t\r\n_a-zA-Z0-9`][^ \t\r\n]*/)),
-    )),
 
     identifier: _ => /[_a-zA-Z][_a-zA-Z0-9`]*/,
 
