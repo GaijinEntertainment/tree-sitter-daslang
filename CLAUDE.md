@@ -56,8 +56,9 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
     would have to read every operator to see these.
 - The grammar does not run reader macros or read included files. Input whose syntax depends on them can parse
   otherwise than in the compiler: an included file that holds part of a declaration, an inline reader macro whose
-  rewrite is not one operand, and a `%name~` macro that ends its text at a place other than the first `%%`, where
-  `reader_text` ends.
+  rewrite is not one operand, an inline reader macro whose parenthesized rewrite completes the syntax before it, as
+  `f %m! x %%` is a call when the rewrite is `(x)`, and a `%name~` macro that ends its text at a place other than the
+  first `%%`, where `reader_text` ends.
 - The files of daScript `master` that the compiler rejects for a syntax error: `tests/language/failed_aka.das`,
   `failed_annotation_int64_overflow.das`, `failed_annotation_int64_positive.das`, `failed_cast_requires_parens.das`,
   `failed_comment_eof.das`, `failed_constants.das`, `failed_mismatching_curly_bracers.das`,
