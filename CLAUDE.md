@@ -42,7 +42,9 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
     splits it into `>` tokens while a type is open; the scanner splits it only where the parse state takes no shift
     operator.
   - A token that the compiler lexer reads by the longest match where the grammar's parse state takes only a shorter
-    one, outside the tokens that the scanner reads.
+    one, outside the tokens that the scanner reads: `var a &= 1`, `a : int&&`, and `x => a..b` read as `&` `=`, `&`
+    `&`, and `.` `.`. The internal lexer of tree-sitter considers only the tokens of the parse state; the scanner
+    would have to read every operator to see these.
 - The grammar does not run reader macros or read included files. Input whose syntax depends on them can parse
   otherwise than in the compiler: an included file that holds part of a declaration, an inline reader macro whose
   rewrite is not one operand, and a `%name~` macro that ends its text at a place other than the first `%%`, where
