@@ -122,6 +122,31 @@ def f(a, b, c) {
     body: (block_expression)))
 
 ================================================================================
+Inheritance prefix before any annotation
+================================================================================
+
+[|> |> a, |> !b, |> c && d]
+struct S {
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (struct_declaration
+    annotations: (annotation_list
+      (annotation_declaration
+        name: (identifier))
+      (annotation_declaration
+        arguments: (annotation_declaration
+          name: (identifier)))
+      (annotation_declaration
+        arguments: (annotation_declaration
+          name: (identifier))
+        arguments: (annotation_declaration
+          name: (identifier))))
+    name: (identifier)))
+
+================================================================================
 Function arguments with metadata and tags
 ================================================================================
 
