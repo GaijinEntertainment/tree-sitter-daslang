@@ -1,0 +1,712 @@
+================================================================================
+Function declarations
+================================================================================
+
+def a {
+    pass
+}
+
+def private b() : int {
+    return 1
+}
+
+def public c(x : int; y, z : float = 1.0) -> string {
+    return ""
+}
+
+def template d(var e : auto(T); f = 2) => e
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_declaration
+    name: (identifier)
+    body: (block_expression))
+  (function_declaration
+    name: (identifier)
+    result: (basic_type)
+    body: (block_expression
+      (return_expression
+        subexpression: (constant_integer))))
+  (function_declaration
+    name: (identifier)
+    arguments: (variable_declaration
+      name: (identifier)
+      type: (basic_type))
+    arguments: (variable_declaration
+      name: (identifier)
+      name: (identifier)
+      type: (basic_type)
+      init: (constant_float))
+    result: (basic_type)
+    body: (block_expression
+      (return_expression
+        subexpression: (constant_string))))
+  (function_declaration
+    name: (identifier)
+    arguments: (variable_declaration
+      name: (identifier)
+      type: (auto_type
+        alias: (identifier)))
+    arguments: (variable_declaration
+      name: (identifier)
+      init: (constant_integer))
+    body: (variable
+      name: (identifier))))
+
+================================================================================
+Function with annotations
+================================================================================
+
+[export, unsafe_operation, hint(a = 1, b = "two")]
+def main {
+    pass
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_declaration
+    annotations: (annotation_list
+      (annotation_declaration
+        name: (identifier))
+      (annotation_declaration
+        name: (identifier))
+      (annotation_declaration
+        name: (identifier)
+        arguments: (annotation_argument
+          name: (identifier)
+          value: (constant_integer))
+        arguments: (annotation_argument
+          name: (identifier)
+          value: (constant_string))))
+    name: (identifier)
+    body: (block_expression)))
+
+================================================================================
+Annotation logic
+================================================================================
+
+[!expect_ref(a) && (expect_dim(b) || expect_any(c)), |>inherited]
+def f(a, b, c) {
+    pass
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_declaration
+    annotations: (annotation_list
+      (annotation_declaration
+        arguments: (annotation_declaration
+          arguments: (annotation_declaration
+            name: (identifier)
+            arguments: (annotation_argument
+              name: (identifier))))
+        arguments: (annotation_declaration
+          arguments: (annotation_declaration
+            name: (identifier)
+            arguments: (annotation_argument
+              name: (identifier)))
+          arguments: (annotation_declaration
+            name: (identifier)
+            arguments: (annotation_argument
+              name: (identifier)))))
+      (annotation_declaration
+        name: (identifier)))
+    name: (identifier)
+    arguments: (variable_declaration
+      name: (identifier)
+      name: (identifier)
+      name: (identifier))
+    body: (block_expression)))
+
+================================================================================
+Function arguments with metadata and tags
+================================================================================
+
+def f(@hint x : int; let y : float; $a(args)) {
+    pass
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_declaration
+    name: (identifier)
+    arguments: (variable_declaration
+      annotation: (annotation_argument
+        name: (identifier))
+      name: (identifier)
+      type: (basic_type))
+    arguments: (variable_declaration
+      name: (identifier)
+      type: (basic_type))
+    arguments: (variable_declaration
+      name: (tag
+        subexpression: (variable
+          name: (identifier))))
+    body: (block_expression)))
+
+================================================================================
+Function returning by move
+================================================================================
+
+def f() => <- [1, 2]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_declaration
+    name: (identifier)
+    body: (make_array
+      values: (constant_integer)
+      values: (constant_integer))))
+
+================================================================================
+Operator functions
+================================================================================
+
+def operator +(a, b : Foo) : Foo => a
+def operator [](a : Foo; i : int) => i
+def operator [] =(var a : Foo; i : int; v : int) {
+    pass
+}
+def operator .field(a : Foo) => 1
+def operator . name := (var a : Foo; v : int) {
+    pass
+}
+def operator is name(a : Foo) => true
+def operator ?as int(a : Foo) => 1
+def ++ operator(var a : Foo) => a
+def operator delete(var a : Foo) {
+    pass
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_declaration
+    name: (operator_name)
+    arguments: (variable_declaration
+      name: (identifier)
+      name: (identifier)
+      type: (structure_type
+        name: (identifier)))
+    result: (structure_type
+      name: (identifier))
+    body: (variable
+      name: (identifier)))
+  (function_declaration
+    name: (operator_name)
+    arguments: (variable_declaration
+      name: (identifier)
+      type: (structure_type
+        name: (identifier)))
+    arguments: (variable_declaration
+      name: (identifier)
+      type: (basic_type))
+    body: (variable
+      name: (identifier)))
+  (function_declaration
+    name: (operator_name)
+    arguments: (variable_declaration
+      name: (identifier)
+      type: (structure_type
+        name: (identifier)))
+    arguments: (variable_declaration
+      name: (identifier)
+      type: (basic_type))
+    arguments: (variable_declaration
+      name: (identifier)
+      type: (basic_type))
+    body: (block_expression))
+  (function_declaration
+    name: (operator_name
+      field: (identifier))
+    arguments: (variable_declaration
+      name: (identifier)
+      type: (structure_type
+        name: (identifier)))
+    body: (constant_integer))
+  (function_declaration
+    name: (operator_name
+      field: (identifier))
+    arguments: (variable_declaration
+      name: (identifier)
+      type: (structure_type
+        name: (identifier)))
+    arguments: (variable_declaration
+      name: (identifier)
+      type: (basic_type))
+    body: (block_expression))
+  (function_declaration
+    name: (operator_name
+      field: (identifier))
+    arguments: (variable_declaration
+      name: (identifier)
+      type: (structure_type
+        name: (identifier)))
+    body: (constant_boolean))
+  (function_declaration
+    name: (operator_name
+      field: (basic_type))
+    arguments: (variable_declaration
+      name: (identifier)
+      type: (structure_type
+        name: (identifier)))
+    body: (constant_integer))
+  (function_declaration
+    name: (operator_name)
+    arguments: (variable_declaration
+      name: (identifier)
+      type: (structure_type
+        name: (identifier)))
+    body: (variable
+      name: (identifier)))
+  (function_declaration
+    name: (operator_name)
+    arguments: (variable_declaration
+      name: (identifier)
+      type: (structure_type
+        name: (identifier)))
+    body: (block_expression)))
+
+================================================================================
+Conversion function named by a type
+================================================================================
+
+def float4(a : Foo) : float4 {
+    return float4(0)
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_declaration
+    name: (basic_type)
+    arguments: (variable_declaration
+      name: (identifier)
+      type: (structure_type
+        name: (identifier)))
+    result: (basic_type)
+    body: (block_expression
+      (return_expression
+        subexpression: (call
+          name: (basic_type)
+          arguments: (constant_integer))))))
+
+================================================================================
+Global variables
+================================================================================
+
+let a = 1
+var b : int
+let shared c = [1, 2]
+var private d : float = 1.0
+let @tag e = 2
+let f, g = 3
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (global_let
+    variables: (variable_declaration
+      name: (identifier)
+      init: (constant_integer)))
+  (global_let
+    variables: (variable_declaration
+      name: (identifier)
+      type: (basic_type)))
+  (global_let
+    variables: (variable_declaration
+      name: (identifier)
+      init: (make_array
+        values: (constant_integer)
+        values: (constant_integer))))
+  (global_let
+    variables: (variable_declaration
+      name: (identifier)
+      type: (basic_type)
+      init: (constant_float)))
+  (global_let
+    variables: (variable_declaration
+      annotation: (annotation_argument
+        name: (identifier))
+      name: (identifier)
+      init: (constant_integer)))
+  (global_let
+    variables: (variable_declaration
+      name: (identifier)
+      name: (identifier)
+      init: (constant_integer))))
+
+================================================================================
+Global variable list
+================================================================================
+
+let {
+    a = 1
+    @tag b : int = 2
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (global_let
+    variables: (variable_declaration
+      name: (identifier)
+      init: (constant_integer))
+    variables: (variable_declaration
+      annotation: (annotation_argument
+        name: (identifier))
+      name: (identifier)
+      type: (basic_type)
+      init: (constant_integer))))
+
+================================================================================
+Structure
+================================================================================
+
+struct Foo {
+    a : int
+    b, c : float = 1.0
+    @meta d : string
+    private e = 2
+    static f : int
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (struct_declaration
+    name: (identifier)
+    fields: (field_declaration
+      name: (identifier)
+      type: (basic_type))
+    fields: (field_declaration
+      name: (identifier)
+      name: (identifier)
+      type: (basic_type)
+      init: (constant_float))
+    fields: (field_declaration
+      annotation: (annotation_argument
+        name: (identifier))
+      name: (identifier)
+      type: (basic_type))
+    fields: (field_declaration
+      name: (identifier)
+      init: (constant_integer))
+    fields: (field_declaration
+      name: (identifier)
+      type: (basic_type))))
+
+================================================================================
+Structure with a parent and modifiers
+================================================================================
+
+struct public sealed Foo : mod::Bar {
+    override a : int = 1
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (struct_declaration
+    name: (identifier)
+    parent: (qualified_name
+      module: (identifier)
+      name: (identifier))
+    fields: (field_declaration
+      name: (identifier)
+      type: (basic_type)
+      init: (constant_integer))))
+
+================================================================================
+Structure without a body
+================================================================================
+
+struct Foo;
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (struct_declaration
+    name: (identifier)))
+
+================================================================================
+Class with methods
+================================================================================
+
+[cpp_layout]
+class Foo : Base {
+    a : int
+    typedef T = array<int>
+    def Foo {
+        a = 1
+    }
+    def override get : int {
+        return a
+    }
+    def const size() => a
+    def static make() : Foo? => new Foo()
+    def abstract run(x : int) : void
+    def private sealed helper {
+        pass
+    }
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (class_declaration
+    annotations: (annotation_list
+      (annotation_declaration
+        name: (identifier)))
+    name: (identifier)
+    parent: (identifier)
+    fields: (field_declaration
+      name: (identifier)
+      type: (basic_type))
+    aliases: (typedef_declaration
+      name: (identifier)
+      type: (array_type
+        first_type: (basic_type)))
+    methods: (function_declaration
+      name: (identifier)
+      body: (block_expression
+        (copy
+          left: (variable
+            name: (identifier))
+          right: (constant_integer))))
+    methods: (function_declaration
+      name: (identifier)
+      result: (basic_type)
+      body: (block_expression
+        (return_expression
+          subexpression: (variable
+            name: (identifier)))))
+    methods: (function_declaration
+      name: (identifier)
+      body: (variable
+        name: (identifier)))
+    methods: (function_declaration
+      name: (identifier)
+      result: (pointer_type
+        first_type: (structure_type
+          name: (identifier)))
+      body: (new_expression
+        type_expression: (structure_type
+          name: (identifier))))
+    methods: (function_declaration
+      name: (identifier)
+      arguments: (variable_declaration
+        name: (identifier)
+        type: (basic_type))
+      result: (basic_type))
+    methods: (function_declaration
+      name: (identifier)
+      body: (block_expression))))
+
+================================================================================
+Template structure and class
+================================================================================
+
+struct template Foo {
+    a : int
+}
+
+class template Bar {
+    b : int
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (struct_declaration
+    name: (identifier)
+    fields: (field_declaration
+      name: (identifier)
+      type: (basic_type)))
+  (class_declaration
+    name: (identifier)
+    fields: (field_declaration
+      name: (identifier)
+      type: (basic_type))))
+
+================================================================================
+Enumerations
+================================================================================
+
+enum Color {
+    Red
+    Green = 2
+    Blue
+}
+
+enum private Flags : uint8 { A, B, C, }
+
+[annotation]
+enum Empty {
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (enumeration_declaration
+    name: (identifier)
+    list: (enumeration_entry
+      name: (identifier))
+    list: (enumeration_entry
+      name: (identifier)
+      value: (constant_integer))
+    list: (enumeration_entry
+      name: (identifier)))
+  (enumeration_declaration
+    name: (identifier)
+    base_type: (basic_type)
+    list: (enumeration_entry
+      name: (identifier))
+    list: (enumeration_entry
+      name: (identifier))
+    list: (enumeration_entry
+      name: (identifier)))
+  (enumeration_declaration
+    annotations: (annotation_list
+      (annotation_declaration
+        name: (identifier)))
+    name: (identifier)))
+
+================================================================================
+Enumeration with a line break before the brace
+================================================================================
+
+enum Color
+{
+    Red
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (enumeration_declaration
+    name: (identifier)
+    list: (enumeration_entry
+      name: (identifier))))
+
+================================================================================
+Type aliases
+================================================================================
+
+typedef A = int
+typedef private B = array<string>
+typedef distinct C = float
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (typedef_declaration
+    name: (identifier)
+    type: (basic_type))
+  (typedef_declaration
+    name: (identifier)
+    type: (array_type
+      first_type: (basic_type)))
+  (typedef_declaration
+    kind: (identifier)
+    name: (identifier)
+    type: (basic_type)))
+
+================================================================================
+Tuple alias
+================================================================================
+
+tuple Pair {
+    first : int
+    second : string
+}
+
+tuple public Triple { int; float; string }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tuple_alias_declaration
+    name: (identifier)
+    argument_names: (identifier)
+    argument_types: (basic_type)
+    argument_names: (identifier)
+    argument_types: (basic_type))
+  (tuple_alias_declaration
+    name: (identifier)
+    argument_types: (basic_type)
+    argument_types: (basic_type)
+    argument_types: (basic_type)))
+
+================================================================================
+Variant alias
+================================================================================
+
+variant Value {
+    i : int
+    f : float
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (variant_alias_declaration
+    name: (identifier)
+    argument_names: (identifier)
+    argument_types: (basic_type)
+    argument_names: (identifier)
+    argument_types: (basic_type)))
+
+================================================================================
+Bitfield alias
+================================================================================
+
+bitfield Flags {
+    a
+    b
+    c = a | b
+}
+
+bitfield Small : uint8 { x, y }
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (bitfield_alias_declaration
+    name: (identifier)
+    argument_names: (bitfield_entry
+      name: (identifier))
+    argument_names: (bitfield_entry
+      name: (identifier))
+    argument_names: (bitfield_entry
+      name: (identifier)
+      value: (binary_operation
+        left: (variable
+          name: (identifier))
+        right: (variable
+          name: (identifier)))))
+  (bitfield_alias_declaration
+    name: (identifier)
+    (basic_type)
+    argument_names: (bitfield_entry
+      name: (identifier))
+    argument_names: (bitfield_entry
+      name: (identifier))))
+
+================================================================================
+Top-level reader macro
+================================================================================
+
+%spoof_template~ text %%
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (reader
+    macro: (identifier)
+    sequence: (reader_text)))

@@ -42,6 +42,14 @@ enum TokenType {
   NOT_AS,
   NOT_SAFE_AS,
   MAP_TO,
+  LEFT_ARROW,
+  GREATER,
+  GREATER_EQUAL,
+  SHIFT_RIGHT,
+  SHIFT_RIGHT_ASSIGN,
+  ROTATE_RIGHT,
+  ROTATE_RIGHT_ASSIGN,
+  FINALLY,
   INTEGER,
   UNSIGNED_INTEGER,
   LONG_INTEGER,
@@ -52,6 +60,7 @@ enum TokenType {
   DOUBLE,
   FLOAT16,
   BLOCK_COMMENT,
+  LINE_END,
   LEXER_ERROR,
   ERROR_SENTINEL,
 };
@@ -81,6 +90,8 @@ typedef struct {
   Level level;
   bool brace_after_semicolon;
   bool eof_done;
+  bool after_finally;
+  bool line_end_pending;
   uint16_t interpolations;
   uint16_t braces;
   Brace stack[BRACES_MAX];
@@ -412,53 +423,127 @@ static bool accept_integer(TSLexer *lexer, enum TokenType token, Digits digits) 
   return accept(lexer, token);
 }
 
-static bool scan_exponent(TSLexer *lexer) {
+enum { DECIMAL_DIGITS = 31 };
+
+// The significant digits and the decimal exponent of a float constant, for the check against the double range.
+typedef struct {
+  char digits[DECIMAL_DIGITS];
+  unsigned count;
+  bool nonzero;
+  bool in_fraction;
+  int32_t exponent;
+  int32_t explicit_exponent;
+} Decimal;
+
+static void add_decimal_digit(Decimal *decimal, int32_t c) {
+  if (!decimal->nonzero) {
+    if (c == '0') {
+      if (decimal->in_fraction) {
+        decimal->exponent--;
+      }
+      return;
+    }
+    decimal->nonzero = true;
+    decimal->exponent = decimal->in_fraction ? decimal->exponent - 1 : 0;
+  } else if (!decimal->in_fraction) {
+    decimal->exponent++;
+  }
+  if (decimal->count < DECIMAL_DIGITS) {
+    decimal->digits[decimal->count++] = (char)c;
+  }
+}
+
+static int compare_significand(const Decimal *decimal, const char *bound) {
+  for (unsigned i = 0; i < DECIMAL_DIGITS; i++) {
+    char digit = i < decimal->count ? decimal->digits[i] : '0';
+    char limit = bound[i] != '\0' ? bound[i] : '0';
+    if (digit != limit) {
+      return digit < limit ? -1 : 1;
+    }
+  }
+  return 0;
+}
+
+// constraint: the compiler reads each float constant with fast_float::from_chars into a double and reports a value
+// that rounds to infinity or to zero; the bounds are the midpoints that round to those values
+static bool in_double_range(const Decimal *decimal) {
+  if (!decimal->nonzero) {
+    return true;
+  }
+  int32_t exponent = decimal->exponent + decimal->explicit_exponent;
+  if (exponent != 308 && exponent != -324) {
+    return exponent < 308 && exponent > -324;
+  }
+  if (exponent == 308) {
+    return compare_significand(decimal, "1797693134862315807937289714053") < 0;
+  }
+  return compare_significand(decimal, "2470328229206232720882843964341") > 0;
+}
+
+static bool scan_exponent(TSLexer *lexer, Decimal *decimal) {
   // The caller is at `e` or `E` and has marked the end before it.
   advance(lexer);
+  bool negative = false;
   if (lexer->lookahead == '+' || lexer->lookahead == '-') {
+    negative = lexer->lookahead == '-';
     advance(lexer);
   }
   if (!is_digit(lexer->lookahead)) {
     return false;
   }
+  int32_t value = 0;
   while (is_digit(lexer->lookahead)) {
+    if (value < 1000000) {
+      value = value * 10 + (lexer->lookahead - '0');
+    }
     advance(lexer);
   }
+  decimal->explicit_exponent = negative ? -value : value;
   lexer->mark_end(lexer);
   return true;
 }
 
-static bool accept_float_suffix(TSLexer *lexer) {
+static bool accept_float(TSLexer *lexer, enum TokenType token, const Decimal *decimal) {
+  return accept(lexer, in_double_range(decimal) ? token : LEXER_ERROR);
+}
+
+static bool accept_float_suffix(TSLexer *lexer, const Decimal *decimal) {
   int32_t c = lexer->lookahead;
   if (c == 'f' || c == 'F') {
-    return accept_char(lexer, FLOAT);
+    consume(lexer);
+    return accept_float(lexer, FLOAT, decimal);
   }
   if (c == 'h' || c == 'H') {
-    return accept_char(lexer, FLOAT16);
+    consume(lexer);
+    return accept_float(lexer, FLOAT16, decimal);
   }
   if (c == 'd') {
-    return accept_char(lexer, DOUBLE);
+    consume(lexer);
+    return accept_float(lexer, DOUBLE, decimal);
   }
   if (c == 'l') {
     advance(lexer);
     if (lexer->lookahead == 'f') {
-      return accept_char(lexer, DOUBLE);
+      consume(lexer);
+      return accept_float(lexer, DOUBLE, decimal);
     }
   }
-  return accept(lexer, FLOAT);
+  return accept_float(lexer, FLOAT, decimal);
 }
 
 // Reads the digits after the decimal point, the exponent, and the suffix of a float constant. The caller consumed
 // the point.
-static bool scan_fraction(TSLexer *lexer) {
+static bool scan_fraction(TSLexer *lexer, Decimal *decimal) {
+  decimal->in_fraction = true;
   while (is_digit(lexer->lookahead)) {
+    add_decimal_digit(decimal, lexer->lookahead);
     advance(lexer);
   }
   lexer->mark_end(lexer);
-  if ((lexer->lookahead == 'e' || lexer->lookahead == 'E') && !scan_exponent(lexer)) {
-    return accept(lexer, FLOAT);
+  if ((lexer->lookahead == 'e' || lexer->lookahead == 'E') && !scan_exponent(lexer, decimal)) {
+    return accept_float(lexer, FLOAT, decimal);
   }
-  return accept_float_suffix(lexer);
+  return accept_float_suffix(lexer, decimal);
 }
 
 static bool accept_unsigned_suffix(TSLexer *lexer, Digits digits) {
@@ -479,6 +564,7 @@ static bool accept_unsigned_suffix(TSLexer *lexer, Digits digits) {
 // integer; the limits are those of the compiler's from_chars calls
 static bool scan_number(TSLexer *lexer) {
   Digits digits = {0, false};
+  Decimal decimal = {{0}, 0, false, false, 0, 0};
   if (lexer->lookahead == '0') {
     consume(lexer);
     if (lexer->lookahead == 'x' || lexer->lookahead == 'X') {
@@ -505,6 +591,7 @@ static bool scan_number(TSLexer *lexer) {
     }
   } else {
     add_digit(&digits, 10, (unsigned)(lexer->lookahead - '0'));
+    add_decimal_digit(&decimal, lexer->lookahead);
     advance(lexer);
   }
   bool underscore = false;
@@ -513,6 +600,7 @@ static bool scan_number(TSLexer *lexer) {
       underscore = true;
     } else {
       add_digit(&digits, 10, (unsigned)(lexer->lookahead - '0'));
+      add_decimal_digit(&decimal, lexer->lookahead);
     }
     advance(lexer);
   }
@@ -524,28 +612,23 @@ static bool scan_number(TSLexer *lexer) {
       if (lexer->lookahead == '.') {
         return accept_integer(lexer, INTEGER, digits);
       }
-      return scan_fraction(lexer);
+      return scan_fraction(lexer, &decimal);
     }
     if (c == 'e' || c == 'E') {
-      if (scan_exponent(lexer)) {
-        return accept_float_suffix(lexer);
+      if (scan_exponent(lexer, &decimal)) {
+        return accept_float_suffix(lexer, &decimal);
       }
       return accept_integer(lexer, INTEGER, digits);
     }
-    if (c == 'f' || c == 'F') {
-      return accept_char(lexer, FLOAT);
-    }
-    if (c == 'h' || c == 'H') {
-      return accept_char(lexer, FLOAT16);
-    }
-    if (c == 'd') {
-      return accept_char(lexer, DOUBLE);
+    if (c == 'f' || c == 'F' || c == 'h' || c == 'H' || c == 'd') {
+      return accept_float_suffix(lexer, &decimal);
     }
   }
   if (c == 'l' || c == 'L') {
     consume(lexer);
     if (!underscore && c == 'l' && lexer->lookahead == 'f') {
-      return accept_char(lexer, DOUBLE);
+      consume(lexer);
+      return accept_float(lexer, DOUBLE, &decimal);
     }
     return accept_integer(lexer, LONG_INTEGER, digits);
   }
@@ -728,7 +811,68 @@ static bool scan_exclamation(Scanner *scanner, TSLexer *lexer) {
   }
 }
 
+// constraint: the compiler lexer reads `<-` as one token wherever it appears
+static bool scan_less(TSLexer *lexer) {
+  advance(lexer);
+  return lexer->lookahead == '-' && accept_char(lexer, LEFT_ARROW);
+}
+
+// constraint: the compiler lexer reads `>=`, `>>=`, and `>>>=` as one token wherever they appear, and splits `>>` and
+// `>>>` into `>` tokens while a `<` of a type is open; a state that takes `>` and no shift operator is inside one
+static bool scan_greater(TSLexer *lexer, const bool *valid_symbols) {
+  bool inside_type = valid_symbols[GREATER] && !valid_symbols[SHIFT_RIGHT] && !valid_symbols[ROTATE_RIGHT];
+  consume(lexer);
+  if (lexer->lookahead == '=') {
+    return accept_char(lexer, GREATER_EQUAL);
+  }
+  if (lexer->lookahead != '>') {
+    return accept(lexer, GREATER);
+  }
+  advance(lexer);
+  if (lexer->lookahead == '=') {
+    return accept_char(lexer, SHIFT_RIGHT_ASSIGN);
+  }
+  if (lexer->lookahead != '>') {
+    if (inside_type) {
+      return accept(lexer, GREATER);
+    }
+    lexer->mark_end(lexer);
+    return accept(lexer, SHIFT_RIGHT);
+  }
+  advance(lexer);
+  if (lexer->lookahead == '=') {
+    return accept_char(lexer, ROTATE_RIGHT_ASSIGN);
+  }
+  if (inside_type) {
+    return accept(lexer, GREATER);
+  }
+  lexer->mark_end(lexer);
+  return accept(lexer, ROTATE_RIGHT);
+}
+
+static bool accept_finally(Scanner *scanner, TSLexer *lexer) {
+  lexer->mark_end(lexer);
+  scanner->after_finally = true;
+  return accept(lexer, FINALLY);
+}
+
+static bool is_finally(const char *word, unsigned length) { return length == 7 && strcmp(word, "finally") == 0; }
+
+// constraint: the compiler parser opens a statement level right after `finally`, so a line end before its `{` returns a
+// semicolon even inside `(` or after an `if`
+static bool scan_finally(Scanner *scanner, TSLexer *lexer) {
+  static const char word[] = "finally";
+  for (const char *p = word; *p != '\0'; p++) {
+    if (lexer->lookahead != *p) {
+      return false;
+    }
+    advance(lexer);
+  }
+  return !is_name_char(lexer->lookahead) && accept_finally(scanner, lexer);
+}
+
 static bool scan_open_brace(Scanner *scanner, TSLexer *lexer, const bool *valid_symbols) {
+  scanner->after_finally = false;
   advance(lexer);
   lexer->mark_end(lexer);
   if (valid_symbols[TABLE_OPEN] && !valid_symbols[BLOCK_OPEN]) {
@@ -768,20 +912,24 @@ static bool scan_close_brace(Scanner *scanner, TSLexer *lexer) {
 
 static const char *const STATEMENT_KEYWORDS[] = {"if", "static_if", "for", "while", "with"};
 
-static const char *const CONTINUATION_KEYWORDS[] = {"else", "elif", "static_elif", "finally"};
+static const char *const CONTINUATION_KEYWORDS[] = {"else", "elif", "static_elif"};
 
 // The compiler parser sets a flag before the keyword of an `if`, `for`, `while`, or `with` statement and clears it
 // when the statement ends or a one-line body starts. While the flag is set, a line end returns nothing.
 static bool scan_keyword_marker(Scanner *scanner, TSLexer *lexer, const bool *valid_symbols, bool *matched) {
   *matched = false;
-  if (valid_symbols[KEYWORD_END] && scanner->level.keyword && lexer->lookahead != '{') {
+  if (valid_symbols[KEYWORD_END] && scanner->level.keyword && !(lexer->lookahead == '{' && valid_symbols[BLOCK_OPEN])) {
     char word[16];
     lexer->mark_end(lexer);
     unsigned length = read_word(lexer, word, sizeof word);
-    if (length > 0 && word_is_one_of(word, length, CONTINUATION_KEYWORDS, 4)) {
+    *matched = true;
+    if (is_finally(word, length)) {
+      return accept_finally(scanner, lexer);
+    }
+    if (length > 0 && word_is_one_of(word, length, CONTINUATION_KEYWORDS, 3)) {
+      *matched = false;
       return false;
     }
-    *matched = true;
     scanner->level.keyword = false;
     return accept(lexer, KEYWORD_END);
   }
@@ -789,6 +937,10 @@ static bool scan_keyword_marker(Scanner *scanner, TSLexer *lexer, const bool *va
     char word[16];
     lexer->mark_end(lexer);
     unsigned length = read_word(lexer, word, sizeof word);
+    if (is_finally(word, length)) {
+      *matched = true;
+      return accept_finally(scanner, lexer);
+    }
     if (word_is_one_of(word, length, STATEMENT_KEYWORDS, 5)) {
       *matched = true;
       scanner->level.keyword = true;
@@ -798,8 +950,12 @@ static bool scan_keyword_marker(Scanner *scanner, TSLexer *lexer, const bool *va
   return false;
 }
 
+// The token that a line end returns is zero-width and ends before the line end, so that no node of the tree takes the
+// line break; the next scan returns the line break itself as the extra `_line_end`.
 static bool accept_line_end(Scanner *scanner, TSLexer *lexer) {
-  return accept(lexer, scanner->level.comma_mode ? NEWLINE_COMMA : NEWLINE_SEMICOLON);
+  bool comma = scanner->level.comma_mode && !scanner->after_finally;
+  scanner->after_finally = false;
+  return accept(lexer, comma ? NEWLINE_COMMA : NEWLINE_SEMICOLON);
 }
 
 static bool scan_code(Scanner *scanner, TSLexer *lexer, const bool *valid_symbols, bool error_recovery) {
@@ -817,9 +973,15 @@ static bool scan_code(Scanner *scanner, TSLexer *lexer, const bool *valid_symbol
       }
       skip(lexer);
     } else if (c == '\n') {
-      if (can_break_line(&scanner->level)) {
+      if (scanner->line_end_pending) {
+        scanner->line_end_pending = false;
         advance(lexer);
         lexer->mark_end(lexer);
+        return accept(lexer, LINE_END);
+      }
+      if (can_break_line(&scanner->level) || scanner->after_finally) {
+        lexer->mark_end(lexer);
+        scanner->line_end_pending = true;
         return accept_line_end(scanner, lexer);
       }
       skip(lexer);
@@ -827,10 +989,11 @@ static bool scan_code(Scanner *scanner, TSLexer *lexer, const bool *valid_symbol
       break;
     }
   }
+  scanner->line_end_pending = false;
   lexer->mark_end(lexer);
   int32_t c = lexer->lookahead;
   if (lexer->eof(lexer)) {
-    if (!scanner->eof_done && can_break_line(&scanner->level)) {
+    if (!scanner->eof_done && (can_break_line(&scanner->level) || scanner->after_finally)) {
       scanner->eof_done = true;
       return accept_line_end(scanner, lexer);
     }
@@ -879,6 +1042,12 @@ static bool scan_code(Scanner *scanner, TSLexer *lexer, const bool *valid_symbol
       return scan_exclamation(scanner, lexer);
     case '=':
       return scan_map_to(lexer);
+    case '<':
+      return scan_less(lexer);
+    case '>':
+      return scan_greater(lexer, valid_symbols);
+    case 'f':
+      return scan_finally(scanner, lexer);
     case '{':
       if (error_recovery) {
         advance(lexer);
@@ -898,9 +1067,11 @@ static bool scan_code(Scanner *scanner, TSLexer *lexer, const bool *valid_symbol
       return scan_tag(lexer);
     case '\'':
       return scan_character(lexer);
-    case '.':
+    case '.': {
       advance(lexer);
-      return is_digit(lexer->lookahead) && scan_fraction(lexer);
+      Decimal decimal = {{0}, 0, false, false, 0, 0};
+      return is_digit(lexer->lookahead) && scan_fraction(lexer, &decimal);
+    }
     default:
       return is_digit(c) && scan_number(lexer);
   }
@@ -927,7 +1098,8 @@ unsigned tree_sitter_daslang_external_scanner_serialize(void *payload, char *buf
   out[0] = scanner->level.parens;
   out[1] = scanner->level.squares;
   out[2] = pack_flags(&scanner->level);
-  out[3] = (uint8_t)((scanner->brace_after_semicolon ? 1 : 0) | (scanner->eof_done ? 2 : 0));
+  out[3] = (uint8_t)((scanner->brace_after_semicolon ? 1 : 0) | (scanner->eof_done ? 2 : 0) |
+                     (scanner->after_finally ? 4 : 0) | (scanner->line_end_pending ? 8 : 0));
   memcpy(out + 4, &scanner->interpolations, sizeof scanner->interpolations);
   memcpy(out + 6, &scanner->braces, sizeof scanner->braces);
   unsigned recorded = scanner->braces < BRACES_MAX ? scanner->braces : BRACES_MAX;
@@ -954,6 +1126,8 @@ void tree_sitter_daslang_external_scanner_deserialize(void *payload, const char 
   unpack_flags(&scanner->level, in[2]);
   scanner->brace_after_semicolon = (in[3] & 1) != 0;
   scanner->eof_done = (in[3] & 2) != 0;
+  scanner->after_finally = (in[3] & 4) != 0;
+  scanner->line_end_pending = (in[3] & 8) != 0;
   memcpy(&scanner->interpolations, in + 4, sizeof scanner->interpolations);
   memcpy(&scanner->braces, in + 6, sizeof scanner->braces);
   unsigned recorded = (length - HEADER_SIZE) / BRACE_SIZE;
