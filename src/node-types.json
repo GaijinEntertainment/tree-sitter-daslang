@@ -84,6 +84,10 @@
         "named": true
       },
       {
+        "type": "inline_reader",
+        "named": true
+      },
+      {
         "type": "interval",
         "named": true
       },
@@ -785,6 +789,10 @@
             "named": true
           },
           {
+            "type": "inline_reader",
+            "named": true
+          },
+          {
             "type": "invoke",
             "named": true
           },
@@ -1065,6 +1073,10 @@
             "named": true
           },
           {
+            "type": "inline_reader",
+            "named": true
+          },
+          {
             "type": "invoke",
             "named": true
           },
@@ -1291,6 +1303,10 @@
           },
           {
             "type": "field",
+            "named": true
+          },
+          {
+            "type": "inline_reader",
             "named": true
           },
           {
@@ -1650,6 +1666,10 @@
             "named": true
           },
           {
+            "type": "inline_reader",
+            "named": true
+          },
+          {
             "type": "interval",
             "named": true
           },
@@ -1981,6 +2001,10 @@
         },
         {
           "type": "if_then_else",
+          "named": true
+        },
+        {
+          "type": "inline_reader",
           "named": true
         },
         {
@@ -2511,6 +2535,10 @@
             "named": true
           },
           {
+            "type": "inline_reader",
+            "named": true
+          },
+          {
             "type": "interval",
             "named": true
           },
@@ -2714,6 +2742,10 @@
           },
           {
             "type": "field",
+            "named": true
+          },
+          {
+            "type": "inline_reader",
             "named": true
           },
           {
@@ -2954,6 +2986,10 @@
             "named": true
           },
           {
+            "type": "inline_reader",
+            "named": true
+          },
+          {
             "type": "interval",
             "named": true
           },
@@ -3157,6 +3193,10 @@
           },
           {
             "type": "field",
+            "named": true
+          },
+          {
+            "type": "inline_reader",
             "named": true
           },
           {
@@ -3515,6 +3555,10 @@
             "named": true
           },
           {
+            "type": "inline_reader",
+            "named": true
+          },
+          {
             "type": "invoke",
             "named": true
           },
@@ -3820,6 +3864,10 @@
         },
         {
           "type": "if_then_else",
+          "named": true
+        },
+        {
+          "type": "inline_reader",
           "named": true
         },
         {
@@ -4264,6 +4312,10 @@
             "named": true
           },
           {
+            "type": "inline_reader",
+            "named": true
+          },
+          {
             "type": "invoke",
             "named": true
           },
@@ -4604,6 +4656,10 @@
             "named": true
           },
           {
+            "type": "inline_reader",
+            "named": true
+          },
+          {
             "type": "interval",
             "named": true
           },
@@ -4827,6 +4883,10 @@
           },
           {
             "type": "field",
+            "named": true
+          },
+          {
+            "type": "inline_reader",
             "named": true
           },
           {
@@ -5066,6 +5126,10 @@
           },
           {
             "type": "field",
+            "named": true
+          },
+          {
+            "type": "inline_reader",
             "named": true
           },
           {
@@ -5309,6 +5373,10 @@
             "named": true
           },
           {
+            "type": "inline_reader",
+            "named": true
+          },
+          {
             "type": "invoke",
             "named": true
           },
@@ -5514,6 +5582,10 @@
           },
           {
             "type": "field",
+            "named": true
+          },
+          {
+            "type": "inline_reader",
             "named": true
           },
           {
@@ -5834,6 +5906,10 @@
           },
           {
             "type": "field",
+            "named": true
+          },
+          {
+            "type": "inline_reader",
             "named": true
           },
           {
@@ -6316,6 +6392,10 @@
           },
           {
             "type": "field",
+            "named": true
+          },
+          {
+            "type": "inline_reader",
             "named": true
           },
           {
@@ -7169,6 +7249,10 @@
             "named": true
           },
           {
+            "type": "inline_reader",
+            "named": true
+          },
+          {
             "type": "interval",
             "named": true
           },
@@ -7372,6 +7456,10 @@
           },
           {
             "type": "field",
+            "named": true
+          },
+          {
+            "type": "inline_reader",
             "named": true
           },
           {
@@ -7645,6 +7733,10 @@
             "named": true
           },
           {
+            "type": "inline_reader",
+            "named": true
+          },
+          {
             "type": "invoke",
             "named": true
           },
@@ -7895,6 +7987,10 @@
             "named": true
           },
           {
+            "type": "inline_reader",
+            "named": true
+          },
+          {
             "type": "invoke",
             "named": true
           },
@@ -8094,6 +8190,10 @@
           },
           {
             "type": "field",
+            "named": true
+          },
+          {
+            "type": "inline_reader",
             "named": true
           },
           {
@@ -8455,6 +8555,10 @@
             "named": true
           },
           {
+            "type": "inline_reader",
+            "named": true
+          },
+          {
             "type": "invoke",
             "named": true
           },
@@ -8658,6 +8762,10 @@
           },
           {
             "type": "field",
+            "named": true
+          },
+          {
+            "type": "inline_reader",
             "named": true
           },
           {
@@ -9151,6 +9259,10 @@
             "named": true
           },
           {
+            "type": "inline_reader",
+            "named": true
+          },
+          {
             "type": "invoke",
             "named": true
           },
@@ -9366,6 +9478,10 @@
           },
           {
             "type": "field",
+            "named": true
+          },
+          {
+            "type": "inline_reader",
             "named": true
           },
           {
@@ -9588,6 +9704,10 @@
           },
           {
             "type": "field",
+            "named": true
+          },
+          {
+            "type": "inline_reader",
             "named": true
           },
           {
@@ -10066,6 +10186,10 @@
             "named": true
           },
           {
+            "type": "inline_reader",
+            "named": true
+          },
+          {
             "type": "interval",
             "named": true
           },
@@ -10272,6 +10396,10 @@
             "named": true
           },
           {
+            "type": "inline_reader",
+            "named": true
+          },
+          {
             "type": "invoke",
             "named": true
           },
@@ -10471,6 +10599,10 @@
           },
           {
             "type": "field",
+            "named": true
+          },
+          {
+            "type": "inline_reader",
             "named": true
           },
           {
@@ -10984,6 +11116,10 @@
           },
           {
             "type": "field",
+            "named": true
+          },
+          {
+            "type": "inline_reader",
             "named": true
           },
           {
@@ -11950,6 +12086,10 @@
     "type": "include_directive",
     "named": true,
     "extra": true
+  },
+  {
+    "type": "inline_reader",
+    "named": true
   },
   {
     "type": "inscope",

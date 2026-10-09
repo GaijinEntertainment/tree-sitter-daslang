@@ -7104,6 +7104,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "inline_reader"
+        },
+        {
+          "type": "SYMBOL",
           "name": "variable"
         },
         {
@@ -7576,6 +7580,34 @@
           }
         }
       ]
+    },
+    "inline_reader": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "%"
+          },
+          {
+            "type": "PATTERN",
+            "value": "[_a-zA-Z][_a-zA-Z0-9`]*"
+          },
+          {
+            "type": "STRING",
+            "value": "!"
+          },
+          {
+            "type": "PATTERN",
+            "value": "([^%]|%[^%])*"
+          },
+          {
+            "type": "STRING",
+            "value": "%%"
+          }
+        ]
+      }
     },
     "variable": {
       "type": "FIELD",
