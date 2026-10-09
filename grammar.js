@@ -50,10 +50,10 @@ const KEYWORDS = [
   'module', 'public', 'private', 'shared', 'inscope', 'options', 'require', 'as', 'is', 'expect', 'type', 'in',
   'default', 'true', 'false', 'null', 'let', 'var', 'def', 'template', 'operator', 'auto', 'typedecl', 'smart_ptr',
   'array', 'fixed_array', 'table', 'iterator', 'block', 'function', 'lambda', 'tuple', 'variant', 'const', 'implicit',
-  'explicit', 'capture', 'generator', 'struct', 'class', 'new', 'delete', 'cast', 'upcast', 'reinterpret', 'addr',
-  'deref', 'typeinfo', 'uninitialized', 'unsafe', 'for', 'while', 'if', 'static_if', 'elif', 'static_elif', 'else',
-  'with', 'aka', 'assume', 'typedef', 'try', 'recover', 'label', 'goto', 'return', 'yield', 'break', 'continue',
-  'pass', 'where',
+  'explicit', 'capture', 'generator', 'struct', 'class', 'enum', 'static', 'override', 'sealed', 'abstract', 'new',
+  'delete', 'cast', 'upcast', 'reinterpret', 'addr', 'deref', 'typeinfo', 'uninitialized', 'unsafe', 'for', 'while',
+  'if', 'static_if', 'elif', 'static_elif', 'else', 'with', 'aka', 'assume', 'typedef', 'try', 'recover', 'label',
+  'goto', 'return', 'yield', 'break', 'continue', 'pass', 'where',
 ];
 
 const ASSIGNMENT_OPERATORS = ['&=', '|=', '^=', '&&=', '||=', '^^=', '+=', '-=', '*=', '/=', '%=', '<<=', '<<<='];

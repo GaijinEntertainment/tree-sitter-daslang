@@ -15408,6 +15408,26 @@
       },
       {
         "type": "STRING",
+        "value": "enum"
+      },
+      {
+        "type": "STRING",
+        "value": "static"
+      },
+      {
+        "type": "STRING",
+        "value": "override"
+      },
+      {
+        "type": "STRING",
+        "value": "sealed"
+      },
+      {
+        "type": "STRING",
+        "value": "abstract"
+      },
+      {
+        "type": "STRING",
         "value": "new"
       },
       {
