@@ -43,6 +43,10 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
     operator.
   - A token that the compiler lexer reads by the longest match where the grammar's parse state takes only a shorter
     one, outside the tokens that the scanner reads.
+- The grammar does not run reader macros or read included files. Input whose syntax depends on them can parse
+  otherwise than in the compiler: an included file that holds part of a declaration, an inline reader macro whose
+  rewrite is not one operand, and a `%name~` macro that ends its text at a place other than the first `%%`, where
+  `reader_text` ends.
 - The files of daScript `master` that the compiler rejects for a syntax error: `tests/language/failed_aka.das`,
   `failed_annotation_int64_overflow.das`, `failed_annotation_int64_positive.das`, `failed_cast_requires_parens.das`,
   `failed_comment_eof.das`, `failed_constants.das`, `failed_mismatching_curly_bracers.das`,
@@ -119,6 +123,7 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
     is its `name`; the compiler builds an `ExprTag` around the field.
   - `operator_name`, `enumeration_entry`, `bitfield_entry`, `line_directive`, and `include_directive` have no class and
     no reference name.
+  - `inline_reader` is the inline form `%name! ... %%` of a reader macro, for which the compiler builds no node.
   - `negative_integer64_minimum` appears in the tree as `constant_integer64`.
 
 ## Rules
@@ -159,6 +164,9 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
 - The compiler lexer replaces `include` and the file name after it with the text of that file. `include_directive` is an
   extra token, and the grammar reads the text around it as if the included text were empty. A word that only starts
   with `include` is a name.
+- The compiler lexer reads `%name!`, the text, and the first `%%` after it as one token, and parses the rewrite that the
+  macro returns in its place. The language reference requires one parenthesized expression as the rewrite, so
+  `inline_reader` is one token where an operand can stand.
 - The compiler takes one annotation list before a declaration.
 - Keep the `externals` array in `grammar.js` and `enum TokenType` in `src/scanner.c` in the same order.
 - The scanner returns each external token where the compiler lexer would return it, whether or not the parse state

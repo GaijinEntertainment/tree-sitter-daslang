@@ -1704,3 +1704,20 @@ let a = %stringify~ any text %%
       init: (reader
         macro: (identifier)
         sequence: (reader_text)))))
+
+================================================================================
+Inline reader macros
+================================================================================
+
+let a = %stringify! any 50% text
+    on two lines %% + 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (global_let
+    variables: (variable_declaration
+      name: (identifier)
+      init: (binary_operation
+        left: (inline_reader)
+        right: (constant_integer)))))

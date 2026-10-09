@@ -862,6 +862,7 @@ export default grammar({
       $.constant_string,
       $.string_builder,
       $.reader,
+      $.inline_reader,
       $.variable,
       $.parenthesized_expression,
       $.make_tuple,
@@ -940,6 +941,10 @@ export default grammar({
     ),
 
     reader: $ => seq('%', field('macro', $._name_in_namespace), '~', field('sequence', alias($._reader_body, $.reader_text))),
+
+    // constraint: the compiler lexer reads `%name!`, the text, and the first `%%` as one token, and parses the text that
+    // the macro returns in its place
+    inline_reader: _ => token(seq('%', /[_a-zA-Z][_a-zA-Z0-9`]*/, '!', /([^%]|%[^%])*/, '%%')),
 
     variable: $ => field('name', $._name_in_namespace),
 
