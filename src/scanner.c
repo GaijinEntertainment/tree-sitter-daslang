@@ -60,6 +60,7 @@ enum TokenType {
   DOUBLE,
   FLOAT16,
   BLOCK_COMMENT,
+  INCLUDE_DIRECTIVE,
   LINE_END,
   LEXER_ERROR,
   ERROR_SENTINEL,
@@ -912,13 +913,32 @@ static bool scan_close_brace(Scanner *scanner, TSLexer *lexer) {
 
 static const char *const STATEMENT_KEYWORDS[] = {"if", "static_if", "for", "while", "with"};
 
+static bool is_blank(int32_t c) { return c == ' ' || c == '\t' || c == '\r' || c == '\n'; }
+
+// The compiler lexer reads `include`, skips blanks and line breaks, and takes the next run of non-blank characters as
+// the name of the file whose text replaces the directive; at the end of the text, the directive has no file name.
+static bool accept_include(TSLexer *lexer) {
+  // The caller read the word `include`.
+  while (is_blank(lexer->lookahead)) {
+    advance(lexer);
+  }
+  while (!lexer->eof(lexer) && !is_blank(lexer->lookahead)) {
+    advance(lexer);
+  }
+  lexer->mark_end(lexer);
+  return accept(lexer, INCLUDE_DIRECTIVE);
+}
+
 static const char *const CONTINUATION_KEYWORDS[] = {"else", "elif", "static_elif"};
 
-// The compiler parser sets a flag before the keyword of an `if`, `for`, `while`, or `with` statement and clears it
-// when the statement ends or a one-line body starts. While the flag is set, a line end returns nothing.
-static bool scan_keyword_marker(Scanner *scanner, TSLexer *lexer, const bool *valid_symbols, bool *matched) {
+// Reads the include directive and the keyword markers. The compiler parser sets a flag before the keyword of an `if`,
+// `for`, `while`, or `with` statement and clears it when the statement ends or a one-line body starts. While the flag
+// is set, a line end returns nothing.
+static bool scan_word(Scanner *scanner, TSLexer *lexer, const bool *valid_symbols, bool error_recovery, bool *matched) {
   *matched = false;
-  if (valid_symbols[KEYWORD_END] && scanner->level.keyword && !(lexer->lookahead == '{' && valid_symbols[BLOCK_OPEN])) {
+  bool markers = !error_recovery;
+  if (markers && valid_symbols[KEYWORD_END] && scanner->level.keyword &&
+      !(lexer->lookahead == '{' && valid_symbols[BLOCK_OPEN])) {
     char word[16];
     lexer->mark_end(lexer);
     unsigned length = read_word(lexer, word, sizeof word);
@@ -933,10 +953,17 @@ static bool scan_keyword_marker(Scanner *scanner, TSLexer *lexer, const bool *va
     scanner->level.keyword = false;
     return accept(lexer, KEYWORD_END);
   }
-  if (valid_symbols[KEYWORD_START] && is_alpha(lexer->lookahead)) {
+  if (lexer->lookahead == 'i' || (markers && valid_symbols[KEYWORD_START] && is_alpha(lexer->lookahead))) {
     char word[16];
     lexer->mark_end(lexer);
     unsigned length = read_word(lexer, word, sizeof word);
+    if (length == 7 && strcmp(word, "include") == 0) {
+      *matched = true;
+      return accept_include(lexer);
+    }
+    if (!markers || !valid_symbols[KEYWORD_START]) {
+      return false;
+    }
     if (is_finally(word, length)) {
       *matched = true;
       return accept_finally(scanner, lexer);
@@ -1007,15 +1034,13 @@ static bool scan_code(Scanner *scanner, TSLexer *lexer, const bool *valid_symbol
     }
     return false;
   }
-  if (!error_recovery) {
-    bool matched = false;
-    bool found = scan_keyword_marker(scanner, lexer, valid_symbols, &matched);
-    if (found && lexer->result_symbol == KEYWORD_END && c == '}') {
-      scanner->brace_after_semicolon = true;
-    }
-    if (found || matched || lexer->lookahead != c) {
-      return found;
-    }
+  bool matched = false;
+  bool found = scan_word(scanner, lexer, valid_symbols, error_recovery, &matched);
+  if (found && lexer->result_symbol == KEYWORD_END && c == '}') {
+    scanner->brace_after_semicolon = true;
+  }
+  if (found || matched || lexer->lookahead != c) {
+    return found;
   }
   switch (c) {
     case '(':
