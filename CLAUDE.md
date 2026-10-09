@@ -192,6 +192,17 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
   capture of an earlier match that shares a node with a later match.
 - A `#match?` regex must mean the same in Rust regex syntax and in Vim very-magic syntax (Neovim). Write a literal `@`
   as `[@]` and a literal `~` as `[~]`.
+- `queries/highlights.scm` uses only the `#match?`, `#not-match?`, `#eq?`, and `#not-eq?` predicates. The daScript
+  editor runs the file through `modules/dasTreeSitter`, which drops each pattern that uses another predicate or a
+  directive.
+- Each capture name in `queries/highlights.scm` starts with `comment`, `string`, `character`, `number`, `boolean`,
+  `keyword`, `type`, `function`, `variable`, `property`, `constant`, `label`, `attribute`, `module`, `operator`,
+  `punctuation`, or `none`. The daScript editor colors a capture by the start of its name and gives no color to
+  another name.
+- Every `.md` file other than `README.md` is ASCII only, and no link names an anchor of another `.md` file: daScript
+  checks the `.md` files in its tree.
+- The daScript build writes `daslang.dylib`, `daslang.so`, or `daslang.dll` into this directory. Keep the `*.dylib`,
+  `*.so`, and `*.dll` entries of `.gitignore`.
 - In `queries/tags.scm`, tree-sitter-tags keeps one tag per name node, from the earliest pattern that matches it. Put
   a specific pattern before the general pattern for the same node.
 - A workflow pins each action to the commit SHA of a release and names the release in a comment
