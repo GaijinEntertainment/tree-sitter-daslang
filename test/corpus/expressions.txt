@@ -1576,6 +1576,43 @@ def f() {
             name: (identifier)))))))
 
 ================================================================================
+Piped block after a structure constructor
+================================================================================
+
+def f() {
+    S(ok = x) {
+        g()
+    }
+    S(uninitialized) $() {
+    }
+}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (function_declaration
+    name: (identifier)
+    body: (block_expression
+      (pipe
+        function_call: (make_struct
+          make_type: (structure_type
+            (identifier))
+          structs: (make_field_declaration
+            name: (identifier)
+            value: (variable
+              name: (identifier))))
+        argument: (make_block
+          body: (block_expression
+            (call
+              name: (identifier)))))
+      (pipe
+        function_call: (make_struct
+          make_type: (structure_type
+            (identifier)))
+        argument: (make_block
+          body: (block_expression))))))
+
+================================================================================
 Generators
 ================================================================================
 
