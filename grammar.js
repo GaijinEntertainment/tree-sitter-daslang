@@ -199,6 +199,7 @@ export default grammar({
     $.comment,
     $.block_comment,
     $.line_directive,
+    $.include_directive,
     $._line_end,
   ],
 
@@ -1447,5 +1448,8 @@ export default grammar({
     comment: _ => token(seq('//', /.*/)),
 
     line_directive: _ => token(seq('#', /[0-9]+/, ',', /[0-9]+/, ',', /"[^"]+"/, '#')),
+
+    // constraint: the compiler lexer replaces `include` and the file name after it with the text of that file
+    include_directive: _ => token(seq('include', choice(/[ \t]+[^ \t\r\n]+/, /[^ \t\r\n_a-zA-Z0-9`][^ \t\r\n]*/))),
   },
 });
