@@ -991,15 +991,16 @@ export default grammar({
       )),
     )),
 
-    make_struct: $ => choice(
-      $._typed_make_struct,
-      seq(field('make_type', alias($._name_in_namespace, $.structure_type)), parens($, choice(
-        'uninitialized',
-        seq(optional('uninitialized'), $._make_struct_fields, optional(',')),
-      ))),
-    ),
+    make_struct: $ => choice($._typed_make_struct, $._named_make_struct),
 
     typed_make_struct: $ => $._typed_make_struct,
+
+    named_make_struct: $ => $._named_make_struct,
+
+    _named_make_struct: $ => seq(
+      field('make_type', alias($._name_in_namespace, $.structure_type)),
+      parens($, choice('uninitialized', seq(optional('uninitialized'), $._make_struct_fields, optional(',')))),
+    ),
 
     _typed_make_struct: $ => choice(
       seq(choice('struct', 'class'), angles($, field('make_type', $._type_no_options)), $._make_struct_arguments),
@@ -1194,7 +1195,14 @@ export default grammar({
       prec.left(PREC.PIPE, seq(field('function_call', $._operand), '<|', field('argument', $._operand))),
       prec.left(PREC.PIPE, seq(field('argument', $._operand), '|>', field('function_call', choice($._operand, $.basic_type)))),
       prec.left(PREC.PIPE, seq(
-        field('function_call', choice($.call, $.named_call, alias($.method_named_call, $.named_call), $.invoke, $.field)),
+        field('function_call', choice(
+          $.call,
+          alias($.named_make_struct, $.make_struct),
+          $.named_call,
+          alias($.method_named_call, $.named_call),
+          $.invoke,
+          $.field,
+        )),
         field('argument', alias($.piped_block, $.make_block)),
       )),
     ),
