@@ -219,3 +219,19 @@ options gen2;;
   (options_declaration
     (annotation_argument
       name: (identifier))))
+
+================================================================================
+Include directive
+================================================================================
+
+include common/shared.das
+let include_count = 1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (include_directive)
+  (global_let
+    variables: (variable_declaration
+      name: (identifier)
+      init: (constant_integer))))

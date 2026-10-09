@@ -117,7 +117,8 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
   - `qualified_name` has a `module` field, which no AST member holds.
   - A `field`, `safe_field`, `is_variant`, or `as_variant` whose name is a `$f(...)` tag keeps its kind, and the tag
     is its `name`; the compiler builds an `ExprTag` around the field.
-  - `operator_name`, `enumeration_entry`, `bitfield_entry`, and `line_directive` have no class and no reference name.
+  - `operator_name`, `enumeration_entry`, `bitfield_entry`, `line_directive`, and `include_directive` have no class and
+    no reference name.
   - `negative_integer64_minimum` appears in the tree as `constant_integer64`.
 
 ## Rules
@@ -155,6 +156,9 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
 - The compiler parser recovers from a `.` that no name follows through an error rule that reports nothing, and builds a
   field with an empty name. `field` takes that form with `_dot_without_name`, whose low precedence keeps a name after
   the `.` in the field.
+- The compiler lexer replaces `include` and the file name after it with the text of that file. `include_directive` is an
+  extra token, and the grammar reads the text around it as if the included text were empty. A word that only starts
+  with `include` is a name.
 - The compiler takes one annotation list before a declaration.
 - Keep the `externals` array in `grammar.js` and `enum TokenType` in `src/scanner.c` in the same order.
 - The scanner returns each external token where the compiler lexer would return it, whether or not the parse state

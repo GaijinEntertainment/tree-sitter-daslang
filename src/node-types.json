@@ -11947,6 +11947,11 @@
     "named": false
   },
   {
+    "type": "include_directive",
+    "named": true,
+    "extra": true
+  },
+  {
     "type": "inscope",
     "named": false
   },
