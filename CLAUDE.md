@@ -74,6 +74,9 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
   crates.io, PyPI, and npm with trusted publishing and holds no registry token.
 - `eslint.config.mjs` - the lint configuration for `grammar.js` (`npm run lint`).
 - `examples/` - daslang files that the CI workflow parses.
+- `queries/highlights.scm` - editor highlighting. `test/highlight/` holds its capture assertions.
+- `queries/tags.scm` - the definitions and references for code navigation (`tree-sitter tags`). `test/tags/` holds its
+  assertions.
 - `test/corpus/` - corpus tests, one file per topic. `errors.txt` holds the inputs that must produce ERROR, each marked
   `:error`.
 
@@ -184,6 +187,13 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
   non-name. A reserved word must be a token of a rule. `finally` is not in the list: the scanner reads it.
 - `module_path` takes each `.` and `/` after a name, as the compiler does: a require guard ends only before a word, so
   `require ?guard ./mod` is an error.
+- In `queries/highlights.scm`, a later pattern overrides an earlier one in both tree-sitter-highlight and Neovim. Put a
+  specific pattern after the general pattern, and give each pattern one capture: tree-sitter-highlight drops every
+  capture of an earlier match that shares a node with a later match.
+- A `#match?` regex must mean the same in Rust regex syntax and in Vim very-magic syntax (Neovim). Write a literal `@`
+  as `[@]` and a literal `~` as `[~]`.
+- In `queries/tags.scm`, tree-sitter-tags keeps one tag per name node, from the earliest pattern that matches it. Put
+  a specific pattern before the general pattern for the same node.
 - A workflow pins each action to the commit SHA of a release and names the release in a comment
   (`actions/checkout@<sha> # v7.0.1`), which Dependabot reads to update both. A checkout sets
   `persist-credentials: false`.
@@ -217,6 +227,8 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
   directory, and commit the regenerated `src/` files with the change. After a change to `grammar.js`, also run
   `npm run lint`. After a change to `src/scanner.c`, also run `tree-sitter fuzz`, which compares incremental parses
   with fresh parses.
+- After a change to `queries/highlights.scm` or `queries/tags.scm`, run `tree-sitter test`, which runs the assertions
+  in `test/highlight/` and `test/tags/`.
 - After a change to `grammar.js` or `src/scanner.c`, also parse every gen2 file of a daScript checkout. Run these
   commands from the root of the checkout, with `GRAMMAR` set to the directory of this grammar:
 
