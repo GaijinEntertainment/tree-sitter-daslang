@@ -1367,7 +1367,7 @@ export default grammar({
       alias($._greater, '>'),
     ),
 
-    structure_type: $ => field('name', $._name_in_namespace),
+    structure_type: $ => $._name_in_namespace,
 
     type_type: $ => seq('type', angles($, field('first_type', $._type))),
 

@@ -713,7 +713,7 @@ let o = p !?as int
         subexpression: (variable
           name: (identifier))
         type_expression: (structure_type
-          name: (identifier)))))
+          (identifier)))))
   (global_let
     variables: (variable_declaration
       name: (identifier)
@@ -749,7 +749,7 @@ let o = p !?as int
         value: (variable
           name: (identifier))
         name: (structure_type
-          name: (identifier)))))
+          (identifier)))))
   (global_let
     variables: (variable_declaration
       name: (identifier)
@@ -820,7 +820,7 @@ let e = reinterpret<uint8?>(f)
       init: (cast_expression
         cast_type: (pointer_type
           first_type: (structure_type
-            name: (identifier)))
+            (identifier)))
         subexpression: (variable
           name: (identifier)))))
   (global_let
@@ -997,31 +997,31 @@ let e = new Foo(1, 2)
       name: (identifier)
       init: (new_expression
         type_expression: (structure_type
-          name: (identifier)))))
+          (identifier)))))
   (global_let
     variables: (variable_declaration
       name: (identifier)
       init: (new_expression
         type_expression: (structure_type
-          name: (identifier)))))
+          (identifier)))))
   (global_let
     variables: (variable_declaration
       name: (identifier)
       init: (new_expression
         type_expression: (structure_type
-          name: (identifier)))))
+          (identifier)))))
   (global_let
     variables: (variable_declaration
       name: (identifier)
       init: (new_expression
         type_expression: (structure_type
-          name: (identifier)))))
+          (identifier)))))
   (global_let
     variables: (variable_declaration
       name: (identifier)
       init: (new_expression
         type_expression: (structure_type
-          name: (identifier))
+          (identifier))
         arguments: (constant_integer)
         arguments: (constant_integer)))))
 
@@ -1043,7 +1043,7 @@ let d = new struct<Foo>(x = 1)
       init: (ascend
         subexpression: (make_struct
           make_type: (structure_type
-            name: (identifier))
+            (identifier))
           structs: (make_field_declaration
             name: (identifier)
             value: (constant_integer))))))
@@ -1068,7 +1068,7 @@ let d = new struct<Foo>(x = 1)
       init: (ascend
         subexpression: (make_struct
           make_type: (structure_type
-            name: (identifier))
+            (identifier))
           structs: (make_field_declaration
             name: (identifier)
             value: (constant_integer)))))))
@@ -1139,7 +1139,7 @@ let c = array variant<i : int; f : float>(i = 1)
       name: (identifier)
       init: (make_array
         make_type: (structure_type
-          name: (identifier))
+          (identifier))
         structs: (make_field_declaration
           name: (identifier)
           value: (constant_integer))
@@ -1310,7 +1310,7 @@ let e = default<Foo>
       name: (identifier)
       init: (make_struct
         make_type: (structure_type
-          name: (identifier))
+          (identifier))
         structs: (make_field_declaration
           name: (identifier)
           value: (constant_integer)))))
@@ -1319,13 +1319,13 @@ let e = default<Foo>
       name: (identifier)
       init: (make_struct
         make_type: (structure_type
-          name: (identifier)))))
+          (identifier)))))
   (global_let
     variables: (variable_declaration
       name: (identifier)
       init: (make_struct
         make_type: (structure_type
-          name: (identifier))))))
+          (identifier))))))
 
 ================================================================================
 Variant constructors
@@ -1353,7 +1353,7 @@ let b = variant type<V>(f = 1.0)
       name: (identifier)
       init: (make_variant
         make_type: (structure_type
-          name: (identifier))
+          (identifier))
         structs: (make_field_declaration
           name: (identifier)
           value: (constant_float))))))

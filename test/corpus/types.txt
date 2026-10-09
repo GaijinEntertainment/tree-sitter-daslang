@@ -85,7 +85,7 @@ var c : smart_ptr<Foo>
       name: (identifier)
       type: (smart_pointer_type
         first_type: (structure_type
-          name: (identifier))))))
+          (identifier))))))
 
 ================================================================================
 Fixed arrays
@@ -299,17 +299,17 @@ def g(a : auto -const; b : auto -&; c : auto -[]; d : auto -#; e : auto ==const;
       name: (identifier)
       type: (modified_type
         (structure_type
-          name: (identifier))))
+          (identifier))))
     arguments: (variable_declaration
       name: (identifier)
       type: (modified_type
         (structure_type
-          name: (identifier))))
+          (identifier))))
     arguments: (variable_declaration
       name: (identifier)
       type: (modified_type
         (structure_type
-          name: (identifier))))
+          (identifier))))
     body: (block_expression))
   (function_declaration
     name: (identifier)
@@ -362,7 +362,7 @@ def f(a : int | float | string; b : Foo | #) {
       name: (identifier)
       type: (option_type
         argument_types: (structure_type
-          name: (identifier))))
+          (identifier))))
     body: (block_expression)))
 
 ================================================================================
@@ -447,7 +447,7 @@ var a : mod::Foo
     variables: (variable_declaration
       name: (identifier)
       type: (structure_type
-        name: (qualified_name
+        (qualified_name
           module: (identifier)
           name: (identifier))))))
 
