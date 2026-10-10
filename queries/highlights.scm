@@ -1,3 +1,8 @@
+[
+  (constant_string)
+  (string_builder)
+] @string
+
 (identifier) @variable
 
 ((identifier) @constant
@@ -233,11 +238,6 @@
 (constant_boolean) @boolean
 
 (constant_pointer) @constant.builtin
-
-[
-  (constant_string)
-  (string_builder)
-] @string
 
 (escape_sequence) @string.escape
 

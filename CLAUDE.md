@@ -219,6 +219,9 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
 - `queries/highlights.scm` uses only the `#match?`, `#not-match?`, `#eq?`, and `#not-eq?` predicates. The daScript
   editor runs the file through `modules/dasTreeSitter`, which drops each pattern that uses another predicate or a
   directive.
+- The daScript editor ranks overlapping captures by pattern order, not by nesting: inside the range of an earlier
+  capture, a later pattern's capture wins. Put a pattern that captures a node holding other captured nodes, such as a
+  string with interpolations, before the patterns of what it holds.
 - Each capture name in `queries/highlights.scm` starts with `comment`, `string`, `character`, `number`, `boolean`,
   `keyword`, `type`, `function`, `variable`, `property`, `constant`, `label`, `attribute`, `module`, `operator`,
   `punctuation`, or `none`. The daScript editor colors a capture by the start of its name and gives no color to
