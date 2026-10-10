@@ -227,6 +227,9 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
   checks the `.md` files in its tree.
 - The daScript build writes `daslang.dylib`, `daslang.so`, or `daslang.dll` into this directory. Keep the `*.dylib`,
   `*.so`, and `*.dll` entries of `.gitignore`.
+- `.lint_config` sets `format_enabled = false` for the daScript formatter, which checks every `.das` file in the
+  daScript tree. The assertions in `test/highlight/` and `test/tags/` point at exact columns, so the formatter must not
+  touch these files.
 - In `queries/tags.scm`, tree-sitter-tags keeps one tag per name node, from the earliest pattern that matches it. Put
   a specific pattern before the general pattern for the same node.
 - A workflow pins each action to the commit SHA of a release and names the release in a comment
