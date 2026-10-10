@@ -15,11 +15,6 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
   - `-9223372036854775808l`, the minimum of `int64`, as a number constant and an annotation argument.
   - An `int64`, a negative `int64`, a `uint64`, and a negative `int` or `float` constant as an annotation argument.
   - `=>` at the end of a line: the line end after it returns no semicolon.
-- The grammar is a clean-room implementation. No file, rule, query, or test comes from another daslang grammar. Do not
-  open `tree-sitter-daslang/` of daScript or its history, the daScript files that use its node names
-  (`modules/dasTreeSitter/`, `modules/dasImgui/text/`, `tests/tree_sitter/`, `utils/mcp/`, `utils/lsp/`, and every file
-  that `rg -l -i 'tree.?sitter|ast-grep|sgconfig'` lists), the same paths in the Dagor copy, or any other daslang syntax
-  definition (tree-sitter grammars, TextMate, VS Code, Zed, or Vim files).
 - An input that the compiler accepts parses without ERROR or MISSING nodes, and `has_error` of the root node is false.
   An input that the compiler rejects for its syntax produces ERROR wherever the grammar can see the defect.
 - The syntax verdict of the compiler comes from its parser: the compiler rejects the syntax when the parse reports a
