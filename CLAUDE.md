@@ -87,6 +87,9 @@ Tree-sitter grammar for the gen2 syntax of daslang, the scripting language of th
   they resolve the dependencies of the manifests. Commit them with the manifest change.
 - `.github/` - the CI and publish workflows, dependabot, and issue templates. The publish workflow authenticates to
   crates.io, PyPI, and npm with trusted publishing and holds no registry token.
+- `.github/workflows/sync.yml`, `.github/scripts/sync-mirror.sh`, and `.github/workflows/close-pull-requests.yml` - the
+  copy of the grammar changes of daScript `master` to `main`, and the close of pull requests. Both workflows run only
+  when the repository variable `MIRROR_SYNC` is `on`.
 - `eslint.config.mjs` - the lint configuration for `grammar.js` (`npm run lint`).
 - `examples/` - daslang files that the CI workflow parses.
 - `queries/highlights.scm` - editor highlighting. `test/highlight/` holds its capture assertions.
